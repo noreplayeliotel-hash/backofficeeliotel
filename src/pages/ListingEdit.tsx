@@ -6,8 +6,7 @@ import type { Listing } from '../types';
 import {
     Plus, Trash2, X, CheckCircle, AlertCircle, Calendar,
     TrendingUp, Edit3, MapPin, DollarSign, Home, Check, Eye,
-    Image as ImageIcon, Shield, Clock, Sparkles, Star, RotateCcw,
-    Sliders, FileText
+    Image as ImageIcon, Shield, Sparkles, Star
 } from 'lucide-react';
 import { PendingChangesModal } from '../components/PendingChangesModal';
 import { computeListingDiff } from '../utils/listingDiff';

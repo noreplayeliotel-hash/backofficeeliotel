@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { Listing } from '../types';
 import {
     X, Check, AlertTriangle, ArrowRight, Home, DollarSign,
-    MapPin, Users, Sparkles, Image as ImageIcon, Shield, Calendar, Clock
+    MapPin, Users, Sparkles, Image as ImageIcon, Shield, Clock
 } from 'lucide-react';
 import { computeListingDiff } from '../utils/listingDiff';
 

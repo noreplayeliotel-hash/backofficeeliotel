@@ -10,12 +10,6 @@ import {
     ShieldAlert,
     Copy,
     Check,
-    Calendar,
-    User,
-    Home,
-    SlidersHorizontal,
-    ArrowUpRight,
-    ChevronRight,
     RefreshCw
 } from 'lucide-react';
 import { getClientRefunds, processClientRefund, updateBooking } from '../services/adminService';

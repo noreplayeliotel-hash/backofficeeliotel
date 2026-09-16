@@ -44,7 +44,6 @@ const BillingPage: React.FC = () => {
 
     const handlePay = (bookingIds: string[], netAmount: number = 0) => {
         if (netAmount <= 0) {
-            const debt = Math.abs(netAmount);
             if (window.confirm(`⚠️ Attention : Cet hôte a un solde net nul ou négatif (${netAmount.toLocaleString()} € suite aux pénalités d'annulation).\n\nAucun virement bancaire ne sera envoyé.\n\nVoulez-vous clôturer cette période et marquer les réservations comme traitées ?`)) {
                 mutation.mutate(bookingIds);
             }
