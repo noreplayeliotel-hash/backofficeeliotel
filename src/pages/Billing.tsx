@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getBillingSummary, markBookingsAsPaid, updateBooking } from '../services/adminService';
-import { CreditCard, CheckCircle, Clock, Eye, X, Phone, Mail, ToggleLeft, ToggleRight, Search, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { CreditCard, CheckCircle, Clock, Eye, X, Phone, Mail, ToggleLeft, ToggleRight, Search } from 'lucide-react';
 
 const BillingPage: React.FC = () => {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -42,15 +42,9 @@ const BillingPage: React.FC = () => {
 
     const viewingDetails = billingSummary?.find((item: any) => item.host._id === viewingHostId);
 
-    const handlePay = (bookingIds: string[], netAmount: number = 0) => {
-        if (netAmount <= 0) {
-            if (window.confirm(`⚠️ Attention : Cet hôte a un solde net nul ou négatif (${netAmount.toLocaleString()} € suite aux pénalités d'annulation).\n\nAucun virement bancaire ne sera envoyé.\n\nVoulez-vous clôturer cette période et marquer les réservations comme traitées ?`)) {
-                mutation.mutate(bookingIds);
-            }
-        } else {
-            if (window.confirm(`Confirmer l'émission du virement bancaire de ${netAmount.toLocaleString()} € pour ${bookingIds.length} réservation(s) ?`)) {
-                mutation.mutate(bookingIds);
-            }
+    const handlePay = (bookingIds: string[]) => {
+        if (window.confirm(`Confirmer le virement pour ${bookingIds.length} réservation(s) ?`)) {
+            mutation.mutate(bookingIds);
         }
     };
 
@@ -223,82 +217,22 @@ const BillingPage: React.FC = () => {
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    {item.totalAmount > 0 ? (
-                                        <div>
-                                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--light)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
-                                                Virement net à verser
-                                            </div>
-                                            <div style={{ fontSize: '26px', fontWeight: '800', color: '#16a34a' }}>
-                                                {item.totalAmount.toLocaleString()} €
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div>
-                                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--light)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
-                                                Virement net à verser
-                                            </div>
-                                            <div style={{ fontSize: '26px', fontWeight: '800', color: '#0f172a' }}>
-                                                0,00 €
-                                            </div>
-                                            <div style={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '6px',
-                                                background: '#fef2f2',
-                                                border: '1px solid #fecaca',
-                                                color: '#dc2626',
-                                                padding: '3px 10px',
-                                                borderRadius: '16px',
-                                                fontSize: '12px',
-                                                fontWeight: '700',
-                                                marginTop: '4px'
-                                            }}>
-                                                <AlertTriangle size={13} /> Solde Débiteur : -{Math.abs(item.totalAmount).toLocaleString()} €
-                                            </div>
-                                        </div>
-                                    )}
-                                    {item.totalPenalties > 0 && (
-                                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
-                                            Revenus bruts: {(item.grossAmount || 0).toLocaleString()} € • Pénalités: -{(item.totalPenalties || 0).toLocaleString()} €
-                                        </div>
-                                    )}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
-                                        <span style={{ color: 'var(--light)', fontSize: '13px' }}>
+                                    <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary)' }}>
+                                        {item.totalAmount.toLocaleString()} €
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
+                                        <span style={{ color: 'var(--light)', fontSize: '14px' }}>
                                             {item.bookingsCount} réservation(s)
                                         </span>
                                         <button
                                             onClick={() => setViewingHostId(item.host._id)}
-                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--surface)', border: '1px solid var(--border)', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', color: 'var(--primary)', fontSize: '12px', fontWeight: '600' }}
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--surface)', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', color: 'var(--primary)', fontSize: '12px', fontWeight: '600' }}
                                         >
                                             <Eye size={12} /> Détails
                                         </button>
                                     </div>
                                 </div>
                             </div>
-
-                            {item.totalPenalties > 0 && (
-                                <div style={{
-                                    background: item.totalAmount <= 0 ? '#fff1f2' : '#fef2f2',
-                                    border: `1px solid ${item.totalAmount <= 0 ? '#fecdd3' : '#fca5a5'}`,
-                                    borderRadius: '10px',
-                                    padding: '12px 16px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
-                                    color: '#9f1239',
-                                    fontSize: '13px'
-                                }}>
-                                    <ShieldAlert size={20} color="#e11d48" style={{ flexShrink: 0 }} />
-                                    <span>
-                                        <strong>Pénalités d'annulation détectées :</strong> {item.totalPenalties} € déduits.
-                                        {item.totalAmount < 0 ? (
-                                            <> Comme l'hôte n'a pas de revenus locatifs suffisants ce mois-ci, son solde est négatif (<strong>-{Math.abs(item.totalAmount)} €</strong>). Aucun virement bancaire ne doit être émis. Ce solde débiteur sera compensé lors de ses prochains séjours.</>
-                                        ) : (
-                                            <> Les pénalités ont été directement retenues sur le montant du virement de ce mois.</>
-                                        )}
-                                    </span>
-                                </div>
-                            )}
 
                             <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }} />
 
@@ -328,55 +262,15 @@ const BillingPage: React.FC = () => {
                                 </div>
 
                                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
-                                    {item.totalAmount <= 0 ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-                                            <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', textAlign: 'right' }}>
-                                                Solde débiteur : aucun virement requis
-                                            </div>
-                                            <button
-                                                onClick={() => handlePay(item.bookings.map((b: any) => b._id), item.totalAmount)}
-                                                className="btn"
-                                                style={{
-                                                    height: '44px',
-                                                    padding: '0 20px',
-                                                    fontSize: '14px',
-                                                    fontWeight: '700',
-                                                    borderRadius: '10px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '8px',
-                                                    background: '#f1f5f9',
-                                                    color: '#334155',
-                                                    border: '1px solid #cbd5e1',
-                                                    cursor: 'pointer'
-                                                }}
-                                                disabled={mutation.isPending}
-                                            >
-                                                <CheckCircle size={17} />
-                                                {mutation.isPending ? 'Traitement...' : 'Clôturer sans virement (0 €)'}
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => handlePay(item.bookings.map((b: any) => b._id), item.totalAmount)}
-                                            className="btn btn-primary"
-                                            style={{
-                                                height: '48px',
-                                                padding: '0 32px',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                borderRadius: '12px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '10px',
-                                                background: 'linear-gradient(135deg, #E00B41 0%, #D70466 100%)'
-                                            }}
-                                            disabled={mutation.isPending}
-                                        >
-                                            <CheckCircle size={20} />
-                                            {mutation.isPending ? 'Traitement...' : `Effectuer le virement (${item.totalAmount.toLocaleString()} €)`}
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={() => handlePay(item.bookings.map((b: any) => b._id))}
+                                        className="btn btn-primary"
+                                        style={{ height: '48px', padding: '0 32px', fontSize: '16px', fontWeight: '700', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}
+                                        disabled={mutation.isPending}
+                                    >
+                                        <CheckCircle size={20} />
+                                        {mutation.isPending ? 'Traitement...' : 'Marquer comme Payé'}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -406,133 +300,53 @@ const BillingPage: React.FC = () => {
                                         <tr>
                                             <th>Annonce / Voyageur</th>
                                             <th>Dates</th>
-                                            <th>Montant / Pénalité</th>
+                                            <th>Total</th>
                                             <th>Payé ?</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {viewingDetails.bookings.map((b: any) => {
-                                            const isCancelled = b.status === 'cancelled';
-                                            const isHostCancelled = b.cancellation?.cancelledByRole === 'host';
-                                            const penalty = b.bookingPenalty || b.cancellation?.hostCancellationFee || 0;
-                                            const payout = b.bookingPayout !== undefined ? b.bookingPayout : (isCancelled ? (b.cancellation?.hostPayoutAmount || 0) : Math.max(0, (b.total || 0) - (b.serviceFee || 0)));
-
-                                            return (
-                                                <tr key={b._id}>
-                                                    <td>
-                                                        <div style={{ fontWeight: '600' }}>{b.listing?.title || 'Annonce'}</div>
-                                                        {isCancelled && (
-                                                            <span style={{
-                                                                display: 'inline-block',
-                                                                marginTop: '4px',
-                                                                fontSize: '11px',
-                                                                padding: '2px 6px',
-                                                                borderRadius: '4px',
-                                                                background: isHostCancelled ? '#fee2e2' : '#dbeafe',
-                                                                color: isHostCancelled ? '#991b1b' : '#1e40af',
-                                                                fontWeight: 700
-                                                            }}>
-                                                                {isHostCancelled ? 'Annulée par l’hôte' : 'Annulée par le voyageur'}
-                                                            </span>
-                                                        )}
-                                                        <div style={{ fontSize: '13px', marginTop: '6px' }}>
-                                                            <div style={{ color: 'var(--primary)', fontWeight: '500' }}>{b.guest?.firstName} {b.guest?.lastName}</div>
-                                                            <div style={{ color: 'var(--light)', display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} /> {b.guest?.email}</div>
-                                                            {b.guest?.phone && <div style={{ color: 'var(--light)', display: 'flex', alignItems: 'center', gap: '4px' }}><Phone size={12} /> {b.guest?.phone}</div>}
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div style={{ fontSize: '13px' }}>
-                                                            {new Date(b.checkIn).toLocaleDateString()}
-                                                            <br />
-                                                            au {new Date(b.checkOut).toLocaleDateString()}
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        {isHostCancelled && penalty > 0 ? (
-                                                            <div>
-                                                                <div style={{ fontWeight: '700', color: '#dc2626' }}>
-                                                                    -{penalty} €
-                                                                </div>
-                                                                <div style={{ fontSize: '11px', color: '#991b1b' }}>
-                                                                    (Pénalité hôte)
-                                                                </div>
-                                                            </div>
-                                                        ) : isCancelled ? (
-                                                            <div>
-                                                                <div style={{ fontWeight: '700', color: payout > 0 ? '#16a34a' : 'inherit' }}>
-                                                                    {payout} €
-                                                                </div>
-                                                                <div style={{ fontSize: '11px', color: 'var(--light)' }}>
-                                                                    (Indemnité hôte)
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div>
-                                                                <div style={{ fontWeight: '700', color: '#0f172a' }}>
-                                                                    {payout} €
-                                                                </div>
-                                                                {b.serviceFee > 0 && (
-                                                                    <div style={{ fontSize: '11px', color: 'var(--light)', marginTop: '2px' }}>
-                                                                        (Total {b.total} € - Frais {b.serviceFee} €)
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            onClick={() => updateStatusMutation.mutate({ bookingId: b._id, eliotelPaid: !b.eliotelPaid })}
-                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', color: b.eliotelPaid ? 'var(--success)' : 'var(--light)' }}
-                                                        >
-                                                            {b.eliotelPaid ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
+                                        {viewingDetails.bookings.map((b: any) => (
+                                            <tr key={b._id}>
+                                                <td>
+                                                    <div style={{ fontWeight: '600' }}>{b.listing.title}</div>
+                                                    <div style={{ fontSize: '13px', marginTop: '6px' }}>
+                                                        <div style={{ color: 'var(--primary)', fontWeight: '500' }}>{b.guest.firstName} {b.guest.lastName}</div>
+                                                        <div style={{ color: 'var(--light)', display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} /> {b.guest.email}</div>
+                                                        {b.guest.phone && <div style={{ color: 'var(--light)', display: 'flex', alignItems: 'center', gap: '4px' }}><Phone size={12} /> {b.guest.phone}</div>}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div style={{ fontSize: '13px' }}>
+                                                        {new Date(b.checkIn).toLocaleDateString()}
+                                                        <br />
+                                                        au {new Date(b.checkOut).toLocaleDateString()}
+                                                    </div>
+                                                </td>
+                                                <td style={{ fontWeight: '700' }}>{b.total} €</td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => updateStatusMutation.mutate({ bookingId: b._id, eliotelPaid: !b.eliotelPaid })}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', color: b.eliotelPaid ? 'var(--success)' : 'var(--light)' }}
+                                                    >
+                                                        {b.eliotelPaid ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
-                        <div style={{ padding: '16px 24px', background: '#f8fafc', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                            <div style={{ display: 'flex', gap: '20px', alignItems: 'center', fontSize: '13px' }}>
-                                <div>
-                                    <span style={{ color: 'var(--light)' }}>Revenus bruts : </span>
-                                    <strong style={{ color: '#0f172a' }}>{(viewingDetails.grossAmount || 0).toLocaleString()} €</strong>
-                                </div>
-                                {(viewingDetails.totalPenalties || 0) > 0 && (
-                                    <div>
-                                        <span style={{ color: 'var(--light)' }}>Pénalités : </span>
-                                        <strong style={{ color: '#dc2626' }}>-{(viewingDetails.totalPenalties || 0).toLocaleString()} €</strong>
-                                    </div>
-                                )}
-                                <div style={{ borderLeft: '1px solid #cbd5e1', paddingLeft: '16px' }}>
-                                    <span style={{ color: 'var(--light)' }}>Virement net : </span>
-                                    <strong style={{ fontSize: '15px', color: viewingDetails.totalAmount > 0 ? '#16a34a' : '#0f172a' }}>
-                                        {Math.max(0, viewingDetails.totalAmount).toLocaleString()} €
-                                    </strong>
-                                    {viewingDetails.totalAmount < 0 && (
-                                        <span style={{ marginLeft: '8px', color: '#dc2626', fontWeight: '700' }}>
-                                            (Dette hôte : -{Math.abs(viewingDetails.totalAmount).toLocaleString()} €)
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button className="btn" onClick={() => setViewingHostId(null)}>Fermer</button>
-                                <button
-                                    className="btn btn-primary"
-                                    onClick={() => handlePay(viewingDetails.bookings.map((b: any) => b._id), viewingDetails.totalAmount)}
-                                    disabled={mutation.isPending}
-                                    style={{
-                                        background: viewingDetails.totalAmount <= 0 ? '#475569' : undefined
-                                    }}
-                                >
-                                    {viewingDetails.totalAmount <= 0 ? 'Clôturer sans virement' : `Valider virement (${viewingDetails.totalAmount.toLocaleString()} €)`}
-                                </button>
-                            </div>
+                        <div style={{ padding: '20px 24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                            <button className="btn" onClick={() => setViewingHostId(null)}>Fermer</button>
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => handlePay(viewingDetails.bookings.map((b: any) => b._id))}
+                                disabled={mutation.isPending}
+                            >
+                                Marquer tout comme payé
+                            </button>
                         </div>
                     </div>
                 </div>

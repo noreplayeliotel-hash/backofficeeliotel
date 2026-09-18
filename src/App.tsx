@@ -17,7 +17,6 @@ import UsersPage from './pages/Users';
 import ListingsPage from './pages/Listings';
 import BookingsPage from './pages/Bookings';
 import CreateBookingPage from './pages/CreateBooking';
-import ClientRefundsPage from './pages/ClientRefunds';
 import BillingPage from './pages/Billing';
 import PaymentHistoryPage from './pages/PaymentHistory';
 import ReviewsPage from './pages/Reviews';
@@ -56,7 +55,6 @@ function App() {
               <Route path="listings" element={<ListingsPage />} />
               <Route path="bookings" element={<BookingsPage />} />
               <Route path="bookings/new" element={<CreateBookingPage />} />
-              <Route path="refunds" element={<ClientRefundsPage />} />
               <Route path="billing" element={<BillingPage />} />
               <Route path="billing/history" element={<PaymentHistoryPage />} />
               <Route path="reviews" element={<ReviewsPage />} />

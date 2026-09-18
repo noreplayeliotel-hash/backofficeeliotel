@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, CheckCircle, Phone, Mail, Trash2, Edit2, Check, X, ShieldAlert } from 'lucide-react';
+import { Copy, CheckCircle, Phone, Mail, Trash2, Edit2, Check, X } from 'lucide-react';
 import type { Booking } from '../../types';
 
 interface BookingCardProps {
@@ -26,7 +26,6 @@ interface BookingCardProps {
     onStatusChange: (bookingId: string, status: string) => void;
     onPaymentStatusChange: (bookingId: string, paymentStatus: string) => void;
     onDelete: (bookingId: string) => void;
-    onOpenCancellationModal?: (booking: Booking) => void;
 }
 
 const BookingCard: React.FC<BookingCardProps> = ({
@@ -50,7 +49,6 @@ const BookingCard: React.FC<BookingCardProps> = ({
     onStatusChange,
     onPaymentStatusChange,
     onDelete,
-    onOpenCancellationModal,
 }) => {
     const [copied, setCopied] = useState(false);
 
@@ -211,61 +209,11 @@ const BookingCard: React.FC<BookingCardProps> = ({
                 </div>
 
                 {/* Statut réservation */}
-                <div className="mobile-card-row" style={{ alignItems: 'flex-start' }}>
+                <div className="mobile-card-row">
                     <span className="mobile-card-label">STATUT</span>
-                    {booking.status === 'cancelled' ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                            <span
-                                className="status-badge"
-                                style={{
-                                    background: booking.cancellation?.cancelledByRole === 'host' ? '#fee2e2' : '#dbeafe',
-                                    color: booking.cancellation?.cancelledByRole === 'host' ? '#991b1b' : '#1e40af',
-                                    border: `1px solid ${booking.cancellation?.cancelledByRole === 'host' ? '#fca5a5' : '#bfdbfe'}`,
-                                    fontWeight: 700
-                                }}
-                            >
-                                {booking.cancellation?.cancelledByRole === 'host' ? 'Annulée (Hôte)' : 'Annulée (Voyageur)'}
-                            </span>
-                            {booking.cancellation && (
-                                <div style={{ fontSize: '11px', textAlign: 'right' }}>
-                                    {booking.cancellation.cancelledByRole === 'host' ? (
-                                        <div style={{ color: '#dc2626', fontWeight: 600 }}>
-                                            Pén. hôte: {booking.cancellation.hostCancellationFee || 0} €
-                                        </div>
-                                    ) : (
-                                        <div style={{ color: '#2563eb' }}>
-                                            Remb. voy.: {booking.cancellation.refundAmount || 0} €
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            {onOpenCancellationModal && (
-                                <button
-                                    type="button"
-                                    onClick={() => onOpenCancellationModal(booking)}
-                                    style={{
-                                        padding: '4px 10px',
-                                        fontSize: '11px',
-                                        fontWeight: 600,
-                                        borderRadius: '6px',
-                                        border: '1px solid #fca5a5',
-                                        background: '#fef2f2',
-                                        color: '#b91c1c',
-                                        cursor: 'pointer',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '4px'
-                                    }}
-                                >
-                                    <ShieldAlert size={12} /> Gérer annulation
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        <span className={`status-badge ${getStatusColor(booking.status)}`}>
-                            {translateStatus(booking.status)}
-                        </span>
-                    )}
+                    <span className={`status-badge ${getStatusColor(booking.status)}`}>
+                        {translateStatus(booking.status)}
+                    </span>
                 </div>
 
                 {/* Méthode paiement */}
@@ -319,12 +267,11 @@ const BookingCard: React.FC<BookingCardProps> = ({
             </div>
 
             {/* Footer : changer statut */}
-            <div className="mobile-card-footer" style={{ display: 'flex', gap: '8px' }}>
+            <div className="mobile-card-footer">
                 <select
                     value={booking.status}
                     onChange={(e) => onStatusChange(booking._id, e.target.value)}
                     className="mobile-card-select"
-                    style={{ flex: 1 }}
                 >
                     <option value="pending">En attente</option>
                     <option value="confirmed">Confirmée</option>
@@ -332,27 +279,6 @@ const BookingCard: React.FC<BookingCardProps> = ({
                     <option value="cancelled">Annulée</option>
                     <option value="rejected">Refusée</option>
                 </select>
-                {onOpenCancellationModal && booking.status === 'cancelled' && (
-                    <button
-                        type="button"
-                        onClick={() => onOpenCancellationModal(booking)}
-                        style={{
-                            padding: '8px 12px',
-                            background: '#eff6ff',
-                            border: '1px solid #bfdbfe',
-                            borderRadius: '8px',
-                            color: '#1d4ed8',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '12px',
-                            fontWeight: 600
-                        }}
-                    >
-                        <ShieldAlert size={14} /> Gérer
-                    </button>
-                )}
             </div>
         </div>
     );

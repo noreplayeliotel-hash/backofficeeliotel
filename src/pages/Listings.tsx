@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAllListings, updateListingStatus, getActiveHosts } from '../services/adminService';
 import type { Listing, User } from '../types';
-import { ExternalLink, Search, User as UserIcon, X, Mail, Phone, Settings, Check, Edit, Eye } from 'lucide-react';
+import { ExternalLink, Search, User as UserIcon, X, Mail, Phone, Settings } from 'lucide-react';
 import ResponsiveDataView from '../components/ResponsiveDataView';
 import ListingEditPanel from './ListingEdit';
-import { PendingChangesModal } from '../components/PendingChangesModal';
 
 const ListingsPage: React.FC = () => {
     const [search, setSearch] = useState('');
@@ -15,7 +14,6 @@ const ListingsPage: React.FC = () => {
     const [showHostSuggestions, setShowHostSuggestions] = useState(false);
     const [selectedListingForImages, setSelectedListingForImages] = useState<Listing | null>(null);
     const [editingListing, setEditingListing] = useState<Listing | null>(null);
-    const [selectedListingForChanges, setSelectedListingForChanges] = useState<Listing | null>(null);
 
     const queryClient = useQueryClient();
 
@@ -44,14 +42,14 @@ const ListingsPage: React.FC = () => {
     });
 
     const mutation = useMutation({
-        mutationFn: ({ listingId, status, options }: { listingId: string, status: string, options?: any }) => {
+        mutationFn: ({ listingId, status }: { listingId: string, status: string }) => {
             console.log(`Mutation triggered for ${listingId} to ${status}`);
-            return updateListingStatus(listingId, status, options);
+            return updateListingStatus(listingId, status);
         },
         onSuccess: (data) => {
             console.log('Update successful:', data);
             queryClient.invalidateQueries({ queryKey: ['adminListings'] });
-            alert('Annonce mise à jour avec succès');
+            alert('Statut mis à jour avec succès');
         },
         onError: (error: any) => {
             console.error('Update failed:', error);
@@ -239,30 +237,9 @@ const ListingsPage: React.FC = () => {
 
                             <div className="mobile-card-row">
                                 <span className="mobile-card-label">STATUT</span>
-                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                    <span className={`status-badge ${listing.status === 'active' ? 'status-active' : listing.status === 'suspended' ? 'status-cancelled' : 'status-pending'}`}>
-                                        {translateStatus(listing.status)}
-                                    </span>
-                                    {listing.pendingEdit && (
-                                        <button
-                                            onClick={() => setSelectedListingForChanges(listing)}
-                                            className="status-badge"
-                                            style={{
-                                                backgroundColor: '#FEF3C7',
-                                                color: '#B45309',
-                                                border: '1px solid #FCD34D',
-                                                cursor: 'pointer',
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '4px',
-                                                fontWeight: 700
-                                            }}
-                                            title="Cliquer pour voir les nouveaux changements"
-                                        >
-                                            <Eye size={12} /> Modif. en attente
-                                        </button>
-                                    )}
-                                </div>
+                                <span className={`status-badge ${listing.status === 'active' ? 'status-active' : listing.status === 'suspended' ? 'status-cancelled' : 'status-pending'}`}>
+                                    {translateStatus(listing.status)}
+                                </span>
                             </div>
 
                             {/* Dates bloquées */}
@@ -314,36 +291,12 @@ const ListingsPage: React.FC = () => {
                                 <option value="draft">Brouillon</option>
                                 <option value="pending">En attente</option>
                             </select>
-
-                            {listing.pendingEdit && (
-                                <button
-                                    className="mobile-card-action-btn secondary"
-                                    onClick={() => setSelectedListingForChanges(listing)}
-                                    style={{ width: 'auto', padding: '9px 12px', color: '#B45309', backgroundColor: '#FEF3C7', border: '1px solid #FCD34D', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 700 }}
-                                    title="Voir les changements proposés par l'hôte"
-                                >
-                                    <Eye size={16} /> Voir modifs
-                                </button>
-                            )}
-
-                            {(listing.status === 'pending' || Boolean(listing.pendingEdit)) && (
-                                <button
-                                    className="mobile-card-action-btn"
-                                    onClick={() => mutation.mutate({ listingId: listing._id, status: 'active', options: { applyPendingEdit: true } })}
-                                    style={{ width: 'auto', padding: '9px 12px', backgroundColor: '#16A34A', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
-                                    title="Confirmer et publier les modifications"
-                                >
-                                    <Check size={16} /> {listing.pendingEdit ? 'Valider' : 'Valider'}
-                                </button>
-                            )}
-
                             <button
                                 className="mobile-card-action-btn secondary"
-                                onClick={() => setEditingListing(listing)}
-                                style={{ width: '44px', padding: '9px', color: '#4338ca' }}
-                                title="Modifier complètement l'annonce"
+                                onClick={() => window.open(`http://localhost:3000/listings/${listing._id}`, '_blank')}
+                                style={{ width: '44px', padding: '9px' }}
                             >
-                                <Edit size={18} />
+                                <ExternalLink size={18} />
                             </button>
                             <button
                                 className="mobile-card-action-btn secondary"
@@ -352,14 +305,6 @@ const ListingsPage: React.FC = () => {
                                 title="Gérer disponibilités & prix"
                             >
                                 <Settings size={18} />
-                            </button>
-                            <button
-                                className="mobile-card-action-btn secondary"
-                                onClick={() => window.open(`http://localhost:3000/listings/${listing._id}`, '_blank')}
-                                style={{ width: '44px', padding: '9px' }}
-                                title="Voir l'annonce"
-                            >
-                                <ExternalLink size={18} />
                             </button>
                         </div>
                     </div>
@@ -371,52 +316,48 @@ const ListingsPage: React.FC = () => {
                                 <thead>
                                     <tr>
                                         <th>Hôte</th>
+                                        <th>Email</th>
+                                        <th>Téléphone</th>
                                         <th>Annonce</th>
                                         <th>Dates bloquées</th>
                                         <th>Prix saisonniers</th>
                                         <th>Type</th>
                                         <th>Prix</th>
                                         <th>Statut</th>
-                                        <th style={{ textAlign: 'right' }}>Actions</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {listings.map((listing) => (
                                         <tr key={listing._id}>
                                             <td>
-                                                <div>
-                                                    <p style={{ fontSize: '14px', fontWeight: '600', margin: 0, color: 'var(--dark)' }}>
-                                                        {typeof listing.host === 'object' ? `${listing.host.firstName} ${listing.host.lastName}` : 'ID: ' + listing.host}
-                                                    </p>
-                                                    {typeof listing.host === 'object' && (
-                                                        <div style={{ fontSize: '12px', color: 'var(--light)', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                                            {listing.host.email && (
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                                    <Mail size={12} style={{ flexShrink: 0 }} />
-                                                                    <span>{listing.host.email}</span>
-                                                                </div>
-                                                            )}
-                                                            {listing.host.phone && (
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                                    <Phone size={12} style={{ flexShrink: 0 }} />
-                                                                    <span>{listing.host.phone}</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                <p style={{ fontSize: '14px', fontWeight: '600' }}>
+                                                    {typeof listing.host === 'object' ? `${listing.host.firstName} ${listing.host.lastName}` : 'ID: ' + listing.host}
+                                                </p>
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+                                                    <Mail size={14} style={{ color: 'var(--light)' }} />
+                                                    <span>{typeof listing.host === 'object' ? listing.host.email : '-'}</span>
                                                 </div>
                                             </td>
                                             <td>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+                                                    <Phone size={14} style={{ color: 'var(--light)' }} />
+                                                    <span>{(typeof listing.host === 'object' && listing.host.phone) ? listing.host.phone : '-'}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <img
                                                         src={listing.images.find(img => img.isPrimary)?.url || listing.images[0]?.url}
                                                         alt=""
-                                                        style={{ width: '52px', height: '40px', borderRadius: '8px', objectFit: 'cover', cursor: 'pointer', flexShrink: 0 }}
+                                                        style={{ width: '64px', height: '48px', borderRadius: '8px', objectFit: 'cover', cursor: 'pointer' }}
                                                         onClick={() => setSelectedListingForImages(listing)}
                                                     />
                                                     <div>
-                                                        <p style={{ fontWeight: '600', fontSize: '13.5px', margin: 0 }}>{listing.title}</p>
-                                                        <p style={{ fontSize: '12px', color: 'var(--light)', margin: 0 }}>{listing.address.city}</p>
+                                                        <p style={{ fontWeight: '600', fontSize: '14px' }}>{listing.title}</p>
+                                                        <p style={{ fontSize: '12px', color: 'var(--light)' }}>{listing.address.city}</p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -479,24 +420,26 @@ const ListingsPage: React.FC = () => {
                                                 <p style={{ fontWeight: '600' }}>{listing.pricing.basePrice} {listing.pricing.currency}</p>
                                             </td>
                                             <td>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <span className={`status-badge ${listing.status === 'active' ? 'status-active' :
+                                                    listing.status === 'suspended' ? 'status-cancelled' :
+                                                        'status-pending'
+                                                    }`}>
+                                                    {translateStatus(listing.status)}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                                     <select
                                                         value={listing.status}
                                                         onChange={(e) => mutation.mutate({ listingId: listing._id, status: e.target.value })}
-                                                        className={`status-badge ${listing.status === 'active' ? 'status-active' :
-                                                            listing.status === 'suspended' ? 'status-cancelled' :
-                                                                'status-pending'
-                                                            }`}
+                                                        className="input-field"
                                                         style={{
-                                                            border: '1px solid currentColor',
-                                                            cursor: 'pointer',
-                                                            padding: '4px 8px',
-                                                            fontSize: '12px',
-                                                            fontWeight: 600,
-                                                            borderRadius: '16px',
-                                                            outline: 'none',
-                                                            backgroundColor: listing.status === 'active' ? '#DEF7EC' :
-                                                                listing.status === 'suspended' ? '#FDE8E8' : '#FEF3C7'
+                                                            padding: '6px 10px',
+                                                            fontSize: '13px',
+                                                            width: '130px',
+                                                            marginBottom: 0,
+                                                            backgroundColor: 'var(--surface)',
+                                                            cursor: 'pointer'
                                                         }}
                                                     >
                                                         <option value="active">Actif</option>
@@ -505,89 +448,20 @@ const ListingsPage: React.FC = () => {
                                                         <option value="pending">En attente</option>
                                                     </select>
 
-                                                    {listing.pendingEdit && (
-                                                        <button
-                                                            onClick={() => setSelectedListingForChanges(listing)}
-                                                            style={{
-                                                                fontSize: '11px',
-                                                                background: '#FEF3C7',
-                                                                color: '#B45309',
-                                                                padding: '3px 6px',
-                                                                borderRadius: '4px',
-                                                                textAlign: 'center',
-                                                                fontWeight: 700,
-                                                                border: '1px solid #FCD34D',
-                                                                cursor: 'pointer',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                gap: '4px'
-                                                            }}
-                                                            title="Cliquer pour voir les nouveaux changements de l'annonce"
-                                                        >
-                                                            <Eye size={12} /> Voir modifs
-                                                        </button>
-                                                    )}
-
-                                                    {(listing.status === 'pending' || Boolean(listing.pendingEdit)) && (
-                                                        <button
-                                                            onClick={() => mutation.mutate({ listingId: listing._id, status: 'active', options: { applyPendingEdit: true } })}
-                                                            style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                gap: '4px',
-                                                                padding: '3px 8px',
-                                                                backgroundColor: '#16A34A',
-                                                                color: 'white',
-                                                                border: 'none',
-                                                                borderRadius: '6px',
-                                                                fontSize: '11px',
-                                                                fontWeight: 600,
-                                                                cursor: 'pointer'
-                                                            }}
-                                                            title="Confirmer & Activer les modifications de l'hôte"
-                                                        >
-                                                            <Check size={12} /> {listing.pendingEdit ? 'Valider' : 'Valider'}
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                                                <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
-                                                    {listing.pendingEdit && (
-                                                        <button
-                                                            className="btn"
-                                                            style={{ padding: '6px 8px', backgroundColor: '#FEF3C7', borderRadius: '8px', color: '#B45309', border: '1px solid #FCD34D' }}
-                                                            onClick={() => setSelectedListingForChanges(listing)}
-                                                            title="Voir les changements proposés par l'hôte"
-                                                        >
-                                                            <Eye size={16} />
-                                                        </button>
-                                                    )}
                                                     <button
                                                         className="btn"
-                                                        style={{ padding: '6px 8px', backgroundColor: '#eef2ff', borderRadius: '8px', color: '#4338ca' }}
-                                                        onClick={() => setEditingListing(listing)}
-                                                        title="Modifier complètement l'annonce"
+                                                        style={{ padding: '6px', backgroundColor: 'var(--surface)', borderRadius: '8px' }}
+                                                        onClick={() => window.open(`http://localhost:3000/listings/${listing._id}`, '_blank')}
                                                     >
-                                                        <Edit size={16} />
+                                                        <ExternalLink size={18} />
                                                     </button>
                                                     <button
                                                         className="btn"
-                                                        style={{ padding: '6px 8px', backgroundColor: '#fff5f7', borderRadius: '8px', color: 'var(--primary)' }}
+                                                        style={{ padding: '6px', backgroundColor: '#fff5f7', borderRadius: '8px', color: 'var(--primary)' }}
                                                         onClick={() => setEditingListing(listing)}
                                                         title="Gérer disponibilités & prix"
                                                     >
-                                                        <Settings size={16} />
-                                                    </button>
-                                                    <button
-                                                        className="btn"
-                                                        style={{ padding: '6px 8px', backgroundColor: 'var(--surface)', borderRadius: '8px' }}
-                                                        onClick={() => window.open(`http://localhost:3000/listings/${listing._id}`, '_blank')}
-                                                        title="Voir l'annonce"
-                                                    >
-                                                        <ExternalLink size={16} />
+                                                        <Settings size={18} />
                                                     </button>
                                                 </div>
                                             </td>
@@ -683,39 +557,6 @@ const ListingsPage: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            )}
-
-            {/* Modal de comparaison des changements en attente */}
-            {selectedListingForChanges && (
-                <PendingChangesModal
-                    listing={selectedListingForChanges}
-                    onClose={() => setSelectedListingForChanges(null)}
-                    onApprove={() => {
-                        mutation.mutate({
-                            listingId: selectedListingForChanges._id,
-                            status: 'active',
-                            options: { applyPendingEdit: true }
-                        });
-                        setSelectedListingForChanges(null);
-                    }}
-                    onReject={() => {
-                        if (window.confirm('Voulez-vous rejeter ces modifications ? L\'annonce conservera ses anciennes données.')) {
-                            mutation.mutate({
-                                listingId: selectedListingForChanges._id,
-                                status: selectedListingForChanges.status,
-                                options: { rejectPendingEdit: true }
-                            });
-                            setSelectedListingForChanges(null);
-                        }
-                    }}
-                    onOpenFullEdit={() => {
-                        const target = selectedListingForChanges;
-                        setSelectedListingForChanges(null);
-                        setEditingListing(target);
-                    }}
-                    isApproving={mutation.isPending}
-                    isRejecting={mutation.isPending}
-                />
             )}
         </div>
     );

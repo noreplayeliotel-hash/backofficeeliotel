@@ -18,7 +18,7 @@ export interface User {
   ribImage?: string;
 }
 
-export type ListingStatus = 'draft' | 'active' | 'inactive' | 'suspended' | 'pending';
+export type ListingStatus = 'draft' | 'active' | 'inactive' | 'suspended';
 
 export interface Listing {
   _id: string;
@@ -52,9 +52,7 @@ export interface Listing {
     caption?: string;
     isPrimary: boolean;
   }[];
-  amenities?: string[];
   status: ListingStatus;
-  pendingEdit?: any;
   ratings: {
     average: number;
     count: number;
@@ -63,26 +61,6 @@ export interface Listing {
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected';
-export type CancellationPolicy = 'flexible' | 'moderate' | 'strict';
-export type CancellationRefundStatus = 'none' | 'pending' | 'processed' | 'completed';
-
-export interface BookingCancellation {
-  cancelledBy?: User | string;
-  cancelledByRole?: 'host' | 'guest';
-  cancelledAt?: string;
-  cancellationPolicy?: CancellationPolicy;
-  reason?: string;
-  refundAmount?: number;
-  travelerRefundAmount?: number;
-  hostPayoutAmount?: number;
-  stripeFeeDeducted?: number;
-  rib?: string;
-  refundStatus?: CancellationRefundStatus;
-  refundProcessedAt?: string | null;
-  hostCancellationFee?: number;
-  hostCancellationFeeRate?: number;
-  datesBlocked?: boolean;
-}
 
 export interface Booking {
   _id: string;
@@ -99,9 +77,6 @@ export interface Booking {
   paymentStatus: 'pending' | 'paid' | 'refunded' | 'failed';
   paymentMethod?: 'cash' | 'konnect' | 'stripe';
   paymentLink?: string;
-  cancellationPolicy?: CancellationPolicy;
-  cancellation?: BookingCancellation;
-  eliotelPaid?: boolean;
   createdAt: string;
 }
 

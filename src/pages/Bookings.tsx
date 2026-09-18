@@ -14,7 +14,6 @@ import BookingFilters from '../components/bookings/BookingFilters';
 import BookingCard from '../components/bookings/BookingCard';
 import BookingTable from '../components/bookings/BookingTable';
 import DeleteBookingModal from '../components/bookings/DeleteBookingModal';
-import CancellationRefundModal from '../components/bookings/CancellationRefundModal';
 
 type ToastType = 'success' | 'error';
 interface Toast { id: number; message: string; type: ToastType; }
@@ -38,8 +37,6 @@ const BookingsPage: React.FC = () => {
 
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [bookingToDelete, setBookingToDelete] = useState<string | null>(null);
-
-    const [cancellationBooking, setCancellationBooking] = useState<Booking | null>(null);
 
     const queryClient = useQueryClient();
 
@@ -108,20 +105,6 @@ const BookingsPage: React.FC = () => {
         }
     });
 
-    // ✅ Mutation pour mettre à jour l'annulation, le remboursement et la pénalité
-    const updateCancellationMutation = useMutation({
-        mutationFn: ({ bookingId, data }: { bookingId: string; data: any }) =>
-            updateBooking(bookingId, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['adminBookings'] });
-            setCancellationBooking(null);
-            showToast('Annulation et régularisation enregistrées avec succès');
-        },
-        onError: (error: any) => {
-            showToast(error.response?.data?.message || error.message, 'error');
-        }
-    });
-
     const translateStatus = (status: string) => {
         const translations: { [key: string]: string } = {
             pending: 'En attente',
@@ -137,58 +120,41 @@ const BookingsPage: React.FC = () => {
         switch (status) {
             case 'confirmed':
             case 'completed':
-                return 'status-badge-active';
-            case 'pending':
-                return 'status-badge-pending';
+                return 'status-active';
             case 'cancelled':
             case 'rejected':
-                return 'status-badge-suspended';
+                return 'status-cancelled';
             default:
-                return 'status-badge-inactive';
+                return 'status-pending';
         }
     };
 
     const handleStartEditDates = (booking: Booking) => {
         setEditingDates(booking._id);
-        setEditCheckIn(booking.checkIn ? new Date(booking.checkIn).toISOString().split('T')[0] : '');
-        setEditCheckOut(booking.checkOut ? new Date(booking.checkOut).toISOString().split('T')[0] : '');
+        setEditCheckIn(new Date(booking.checkIn).toISOString().split('T')[0]);
+        setEditCheckOut(new Date(booking.checkOut).toISOString().split('T')[0]);
     };
 
     const handleSaveDates = (bookingId: string) => {
-        if (!editCheckIn || !editCheckOut) {
-            showToast('Veuillez renseigner les deux dates', 'error');
-            return;
-        }
-        mutation.mutate({
-            bookingId,
-            data: { checkIn: editCheckIn, checkOut: editCheckOut }
-        });
+        mutation.mutate({ bookingId, data: { checkIn: editCheckIn, checkOut: editCheckOut } });
     };
 
-    const handleStatusChange = (bookingId: string, newStatus: string) => {
-        mutation.mutate({ bookingId, data: { status: newStatus } });
+    const handleStatusChange = (bookingId: string, status: string) => {
+        mutation.mutate({ bookingId, data: { status } });
     };
 
     // ✅ Utilise maintenant la bonne mutation avec la bonne route
-    const handlePaymentStatusChange = (bookingId: string, newPaymentStatus: string) => {
-        paymentStatusMutation.mutate({ bookingId, paymentStatus: newPaymentStatus });
+    const handlePaymentStatusChange = (bookingId: string, paymentStatus: string) => {
+        paymentStatusMutation.mutate({ bookingId, paymentStatus });
     };
 
     const handleStartEditPrice = (booking: Booking) => {
         setEditingPrice(booking._id);
-        setEditPrice(booking.pricing.total.toString());
+        setEditPrice(String(booking.pricing.total));
     };
 
     const handleSavePrice = (bookingId: string) => {
-        const parsed = parseFloat(editPrice);
-        if (isNaN(parsed) || parsed < 0) {
-            showToast('Prix invalide', 'error');
-            return;
-        }
-        mutation.mutate({
-            bookingId,
-            data: { pricingTotal: parsed }
-        });
+        mutation.mutate({ bookingId, data: { pricingTotal: parseFloat(editPrice) } });
     };
 
     const handleDeleteClick = (bookingId: string) => {
@@ -197,9 +163,7 @@ const BookingsPage: React.FC = () => {
     };
 
     const handleConfirmDelete = () => {
-        if (bookingToDelete) {
-            deleteBookingMutation.mutate(bookingToDelete);
-        }
+        if (bookingToDelete) deleteBookingMutation.mutate(bookingToDelete);
     };
 
     if (isLoading) return <div>Chargement...</div>;
@@ -226,7 +190,6 @@ const BookingsPage: React.FC = () => {
         onCancelEditPrice: () => setEditingPrice(null),
         onStatusChange: handleStatusChange,
         onDelete: handleDeleteClick,
-        onOpenCancellationModal: (b: Booking) => setCancellationBooking(b),
     };
 
     return (
@@ -313,14 +276,6 @@ const BookingsPage: React.FC = () => {
                 onConfirm={handleConfirmDelete}
                 bookingId={bookingToDelete || ''}
                 isDeleting={deleteBookingMutation.isPending}
-            />
-
-            <CancellationRefundModal
-                show={!!cancellationBooking}
-                booking={cancellationBooking}
-                onClose={() => setCancellationBooking(null)}
-                onSave={(bookingId, data) => updateCancellationMutation.mutate({ bookingId, data })}
-                isSaving={updateCancellationMutation.isPending}
             />
         </div>
     );

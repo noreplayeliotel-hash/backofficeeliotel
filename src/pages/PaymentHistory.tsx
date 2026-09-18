@@ -200,36 +200,16 @@ const PaymentHistoryPage: React.FC = () => {
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    {item.totalAmount > 0 ? (
-                                        <div>
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--light)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Virement net viré</div>
-                                            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--success)' }}>
-                                                {item.totalAmount.toLocaleString()} €
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div>
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--light)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Virement net</div>
-                                            <div style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a' }}>
-                                                0,00 €
-                                            </div>
-                                            <div style={{ fontSize: '12px', color: '#dc2626', fontWeight: '700' }}>
-                                                Solde débiteur : -{Math.abs(item.totalAmount).toLocaleString()} €
-                                            </div>
-                                        </div>
-                                    )}
-                                    {item.totalPenalties > 0 && (
-                                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                                            Pénalités déduites : -{item.totalPenalties} €
-                                        </div>
-                                    )}
+                                    <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--success)' }}>
+                                        {item.totalAmount.toLocaleString()} €
+                                    </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
                                         <span style={{ color: 'var(--light)', fontSize: '14px' }}>
-                                            {item.bookingsCount} dossier(s)
+                                            {item.bookingsCount} paiement(s) validé(s)
                                         </span>
                                         <button
                                             onClick={() => setViewingHostId(item.host._id)}
-                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--surface)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', color: 'var(--primary)', fontSize: '12px', fontWeight: '600' }}
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--surface)', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', color: 'var(--primary)', fontSize: '12px', fontWeight: '600' }}
                                         >
                                             <Eye size={12} /> Détails
                                         </button>
@@ -239,14 +219,8 @@ const PaymentHistoryPage: React.FC = () => {
 
                             <div style={{ backgroundColor: 'var(--bg)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <CheckCircle size={18} style={{ color: item.totalAmount > 0 ? 'var(--success)' : '#64748b' }} />
-                                    <span style={{ fontSize: '14px', fontWeight: '500' }}>
-                                        {item.totalAmount > 0 ? (
-                                            <>Paiement viré sur le RIB : <span style={{ fontFamily: 'monospace' }}>{item.host.rib || 'N/A'}</span></>
-                                        ) : (
-                                            <span style={{ color: '#64748b' }}>Clôturé sans virement bancaire (Pénalités compensées ou reportées)</span>
-                                        )}
-                                    </span>
+                                    <CheckCircle size={18} style={{ color: 'var(--success)' }} />
+                                    <span style={{ fontSize: '14px', fontWeight: '500' }}>Paiement viré sur le RIB : <span style={{ fontFamily: 'monospace' }}>{item.host.rib || 'N/A'}</span></span>
                                 </div>
                                 {item.host.ribImage && (
                                     <button
@@ -306,88 +280,36 @@ const PaymentHistoryPage: React.FC = () => {
                                         <tr>
                                             <th>Annonce / Voyageur</th>
                                             <th>Dates</th>
-                                            <th>Montant viré / Retenue</th>
+                                            <th>Montant</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {viewingDetails.bookings.map((b: any) => {
-                                            const isCancelled = b.status === 'cancelled';
-                                            const isHostCancelled = b.cancellation?.cancelledByRole === 'host';
-                                            const penalty = b.bookingPenalty || b.cancellation?.hostCancellationFee || 0;
-                                            const payout = b.bookingPayout !== undefined ? b.bookingPayout : (isCancelled ? (b.cancellation?.hostPayoutAmount || 0) : Math.max(0, (b.total || 0) - (b.serviceFee || 0)));
-
-                                            return (
-                                                <tr key={b._id}>
-                                                    <td>
-                                                        <div style={{ fontWeight: '600' }}>{b.listing?.title || 'Annonce'}</div>
-                                                        {isCancelled && (
-                                                            <span style={{
-                                                                display: 'inline-block',
-                                                                marginTop: '4px',
-                                                                fontSize: '11px',
-                                                                padding: '2px 6px',
-                                                                borderRadius: '4px',
-                                                                background: isHostCancelled ? '#fee2e2' : '#dbeafe',
-                                                                color: isHostCancelled ? '#991b1b' : '#1e40af',
-                                                                fontWeight: 700
-                                                            }}>
-                                                                {isHostCancelled ? 'Annulée par l’hôte' : 'Annulée par le voyageur'}
-                                                            </span>
-                                                        )}
-                                                        <div style={{ fontSize: '12px', color: 'var(--light)', marginTop: '4px' }}>
-                                                            {b.guest?.firstName} {b.guest?.lastName}
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div style={{ fontSize: '12px' }}>
-                                                            {new Date(b.checkIn).toLocaleDateString()}
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        {isHostCancelled && penalty > 0 ? (
-                                                            <div>
-                                                                <div style={{ fontWeight: '700', color: '#dc2626' }}>
-                                                                    -{penalty} €
-                                                                </div>
-                                                                <div style={{ fontSize: '11px', color: '#991b1b' }}>
-                                                                    (Retenue pénalité)
-                                                                </div>
-                                                            </div>
-                                                        ) : isCancelled ? (
-                                                            <div>
-                                                                <div style={{ fontWeight: '700', color: payout > 0 ? 'var(--success)' : 'inherit' }}>
-                                                                    {payout} €
-                                                                </div>
-                                                                <div style={{ fontSize: '11px', color: 'var(--light)' }}>
-                                                                    (Indemnité séjour)
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div>
-                                                                <div style={{ fontWeight: '700', color: 'var(--success)' }}>
-                                                                    {payout} €
-                                                                </div>
-                                                                {b.serviceFee > 0 && (
-                                                                    <div style={{ fontSize: '11px', color: 'var(--light)', marginTop: '2px' }}>
-                                                                        (Total {b.total} € - Frais {b.serviceFee} €)
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            onClick={() => updateStatusMutation.mutate({ bookingId: b._id, eliotelPaid: false })}
-                                                            title="Annuler le statut payé"
-                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--success)' }}
-                                                        >
-                                                            <ToggleRight size={32} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
+                                        {viewingDetails.bookings.map((b: any) => (
+                                            <tr key={b._id}>
+                                                <td>
+                                                    <div style={{ fontWeight: '600' }}>{b.listing.title}</div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--light)' }}>
+                                                        {b.guest.firstName} {b.guest.lastName}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div style={{ fontSize: '12px' }}>
+                                                        {new Date(b.checkIn).toLocaleDateString()}
+                                                    </div>
+                                                </td>
+                                                <td style={{ fontWeight: '700', color: 'var(--success)' }}>{b.total} €</td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => updateStatusMutation.mutate({ bookingId: b._id, eliotelPaid: false })}
+                                                        title="Annuler le statut payé"
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--success)' }}
+                                                    >
+                                                        <ToggleRight size={32} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>

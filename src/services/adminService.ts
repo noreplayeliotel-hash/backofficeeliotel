@@ -45,12 +45,8 @@ export const updateUserStatus = async (userId: string, status: string) => {
     return response.data.data;
 };
 
-export const updateListingStatus = async (
-    listingId: string,
-    status: string,
-    options?: { rejectPendingEdit?: boolean; applyPendingEdit?: boolean }
-) => {
-    const response = await api.patch(`/admin/listings/${listingId}/status`, { status, ...options });
+export const updateListingStatus = async (listingId: string, status: string) => {
+    const response = await api.patch(`/admin/listings/${listingId}/status`, { status });
     return response.data.data;
 };
 
@@ -148,14 +144,3 @@ export const getOccupiedDates = async (listingId: string) => {
     });
     return response.data.data;
 };
-
-export const getClientRefunds = async (params?: any) => {
-    const response = await api.get('/admin/client-refunds', { params });
-    return response.data.data;
-};
-
-export const processClientRefund = async (bookingId: string, data?: any) => {
-    const response = await api.post(`/admin/client-refunds/${bookingId}/process`, data);
-    return response.data.data;
-};
-
