@@ -1,0 +1,16 @@
+# Robots.txt pour Eliotel
+User-agent: *
+Allow: /
+Allow: /listing/
+Allow: /about
+Allow: /terms
+Allow: /privacy
+
+# Pages administratives et privées non indexables
+Disallow: /admin
+Disallow: /admin/
+Disallow: /payment/
+Disallow: /delete-account
+
+# Sitemap
+Sitemap: https://eliotel.com/sitemap.xml
